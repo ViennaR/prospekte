@@ -1,0 +1,137 @@
+---
+title: "Wertpapier Prospekt-Daten"
+output: html_notebook
+---
+
+```{r}
+library("rvest")
+library("xml2")
+# Google-Suche nach: AT0000A1X2Y2 filetype:pdf site:https://www.erstegroup.com
+
+search_result_page <- html("https://www.google.at/search?ei=Tjm1Wv-MFsTWkwXnwJLoBw&q=AT0000A1X2Y2+filetype%3Apdf+site%3Ahttps%3A%2F%2Fwww.erstegroup.com&oq=AT0000A1X2Y2+filetype%3Apdf+site%3Ahttps%3A%2F%2Fwww.erstegroup.com&gs_l=psy-ab.3...168634.188311.0.188721.34.32.1.0.0.0.105.1697.31j1.32.0....0...1c.1.64.psy-ab..1.0.0....0.DWpY5hOqPjU")
+# "//div[@class=\"upost-text\"]
+
+# XPath for Search Result with PDF
+xpath = "//h3[@class='r']/a/@href"
+# xpath = "//div[@class=\"rc\"]/h3/a/@href"
+# xpath = "*[@id=\"rso\"]/div/div/div[1]/div/div/h3/a"
+
+document_links <- html_nodes(search_result_page, xpath = xpath)
+document_link <- html_node(search_result_page, xpath = xpath)
+# document_links <- html_nodes(search_result_page, xpath = "...")
+
+document_link_text <- html_text(document_link)
+document_link_url <- html_attr(document_link, "href")
+# help(html_text)
+
+document_links
+document_link_text
+document_link_url
+####
+
+
+
+```
+
+
+```{r}
+library("rvest")
+library("xml2")
+library("pdftools")
+
+#Prospectus page
+base_url = "https://www.erstegroup.com"
+
+url = "https://www.erstegroup.com/de/ueber-uns/erste-group-emissionen/prospekte/anleihen/dip12052017"
+prospectus_page <- read_html(url)
+
+#direct path for first PDF => tr are the table rows for each document -> TODO: loop through it!
+xpath = "//*[@id=\"content\"]/div/section/div[2]/div[3]/div/div[2]/table/tbody/tr[3]/td[1]/a"
+
+#node on webpage
+document_link_node <- html_node(search_result_page, xpath = xpath)
+document_link_node
+# document_links <- html_nodes(search_result_page, xpath = "...")
+
+#URL target and name
+document_link_url <- html_attr(document_link_node, "href")
+document_link_url
+
+document_name <- html_text(document_link_node)
+document_name <- paste(document_name, '.pdf', sep="")
+document_name
+
+#full URL to PDF document
+url = paste(base_url, document_link_url, sep="")
+url
+
+#get prospectus PDF
+download.file(url, document_name, mode = "wb", method = "curl")
+
+
+```
+
+
+
+## Download the Prospectus PDF(s)
+
+curl command from OS
+Example:
+curl -get https://www.erstegroup.com/content/dam/at/eh/www_erstegroup_com/de/Erste%20Group%20Emissionen/prospekte/anleihen/debt-issuance-prog/20170512/20170704-FT-DIP1559.pdf --output test.pdf
+
+Examples: www.ErsteGroup.com > Investor Relations > Debt Issuance Programme > <Date> > Section: Final Terms
+
+Example Base URL for Prospectus https://www.erstegroup.com/de/ueber-uns/erste-group-emissionen/prospekte/anleihen/dip12052017
+
+```{r}
+# Download the Prospectus PDF(s)
+
+# curl command from OS
+# curl -get https://www.erstegroup.com/content/dam/at/eh/www_erstegroup_com/de/Erste%20Group%20Emissionen/prospekte/anleihen/debt-issuance-prog/20170512/20170704-FT-DIP1559.pdf --output test.pdf
+
+# install.packages("RCurl")
+library("RCurl")
+
+url = "https://www.erstegroup.com/content/dam/at/eh/www_erstegroup_com/de/Erste%20Group%20Emissionen/prospekte/anleihen/debt-issuance-prog/20170512/20170704-FT-DIP1559.pdf"
+
+# PDF exists
+PDFexists = url.exists(url)
+if ( PDFexists ) 
+{
+  pdf_document = getURL(url)
+}
+
+# install.packages("pdftools")
+library("pdftools")
+
+download.file(url, "WP01.pdf", mode = "wb", method = "curl")
+
+```
+
+## Parse Text from PDF
+
+in R: Some info from the Web -> looks like a lot with R and pdftools library!
+  https://medium.com/@CharlesBordet/how-to-extract-and-clean-data-from-pdf-files-in-r-da11964e252e
+
+Liad suggests to go with Python instead 
+-> more powerful libraries for Natural Language Processing (NLP)!
+-> THE package for NLP for Python is: nltk
+Recommended book on NLP: http://www.nltk.org/book/
+Package on top of it (not only sourcing from PDFs, but Doc, etc.): textract http://textract.readthedocs.io/en/stable/
+
+Similar topic solved by a German for Financial Statements @ https://simfin.com/ 
+-> Liad suggests to get in contact with him!
+
+Product to purchase in this area is Ontotext - was featured at a recent Datathon in Sofia - https://www.datasciencesociety.net/datathon/#whatis - NLP Use Case: https://www.youtube.com/watch?v=aZIA9QfB2mk (Liad may still have access to the built solution)
+
+
+
+Conference in Vienna coming up: https://www.wearedevelopers.com 
+
+```{r}
+# parsing code goes here
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
